@@ -70,3 +70,12 @@ implementation bug, which was fixed instead.
   invalidated.
 - The Newton–Schulz test now states a property that survives future
   coefficient tuning.
+
+## Addendum: a second real bug found by a reference vector
+
+`Fnv1a`'s prime was written `0x1000_0000_01b3` (13 hex digits) instead of
+`0x0000_0100_0000_01b3`. Every plan hash was therefore computed with the wrong
+multiplier. The `fnv_matches_known_vector` test caught it immediately; the
+constant was fixed and the test extended to three published FNV-1a 64 vectors
+(`""`, `"a"`, `"foobar"`) so a future mistype cannot pass. This is exactly the
+outcome R12 is designed to produce: the test was right and the code was wrong.

@@ -3,7 +3,7 @@
 use crate::graph::{Graph, Phase};
 
 const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
-const PRIME: u64 = 0x1000_0000_01b3;
+const PRIME: u64 = 0x0000_0100_0000_01b3;
 
 /// Streaming FNV-1a hasher used for plan and schema hashes.
 #[derive(Debug, Clone)]
@@ -105,9 +105,17 @@ mod tests {
     }
 
     #[test]
-    fn fnv_matches_known_vector() {
-        let mut h = Fnv1a::default();
-        h.write(b"a");
-        assert_eq!(h.finish(), 0xaf63_dc4c_8601_ec8c);
+    fn fnv_matches_known_vectors() {
+        // Reference digests from the FNV-1a 64-bit specification. These pin
+        // the constants: a mistyped prime silently changes every plan hash.
+        for (input, want) in [
+            ("", 0xcbf2_9ce4_8422_2325u64),
+            ("a", 0xaf63_dc4c_8601_ec8c),
+            ("foobar", 0x8594_4171_f739_67e8),
+        ] {
+            let mut h = Fnv1a::default();
+            h.write(input.as_bytes());
+            assert_eq!(h.finish(), want, "input {input:?}");
+        }
     }
 }
