@@ -79,7 +79,11 @@ pub fn convergence_target(prev: &[f64], cur: &[f64], eps_c: f64) -> f64 {
         .sum::<f64>()
         .sqrt();
     let den: f64 = cur.iter().map(|v| v * v).sum::<f64>().sqrt().max(1e-12);
-    if num / den < eps_c { 1.0 } else { 0.0 }
+    if num / den < eps_c {
+        1.0
+    } else {
+        0.0
+    }
 }
 
 /// Expected calibration error of the halt head over `bins` buckets.
@@ -173,7 +177,10 @@ mod tests {
     #[test]
     fn calibrated_predictor_has_low_ece() {
         let probs: Vec<f64> = (0..100).map(|i| f64::from(i) / 100.0).collect();
-        let labels: Vec<f64> = probs.iter().map(|p| if *p >= 0.5 { 1.0 } else { 0.0 }).collect();
+        let labels: Vec<f64> = probs
+            .iter()
+            .map(|p| if *p >= 0.5 { 1.0 } else { 0.0 })
+            .collect();
         let perfect: Vec<f64> = labels.clone();
         assert!(expected_calibration_error(&perfect, &labels, 10) < 1e-9);
         assert!(expected_calibration_error(&probs, &labels, 10) > 0.1);

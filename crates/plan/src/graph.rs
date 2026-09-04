@@ -422,10 +422,7 @@ mod tests {
         g.push(OpKind::Add, &[x, x], "y", 4, DType::F32)
             .expect("valid");
         let b = g.backward().expect("derivable");
-        assert!(b
-            .tensors()
-            .iter()
-            .any(|t| t.name.starts_with("grad_acc_x")));
+        assert!(b.tensors().iter().any(|t| t.name.starts_with("grad_acc_x")));
     }
 
     #[test]

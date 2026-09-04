@@ -9,10 +9,7 @@ pub fn rmsnorm(x: &[f64], scale: &[f64], eps: f64) -> Vec<f64> {
     let n = x.len() as f64;
     let ms = x.iter().map(|v| v * v).sum::<f64>() / n;
     let inv = 1.0 / (ms + eps).sqrt();
-    x.iter()
-        .zip(scale)
-        .map(|(v, s)| v * inv * s)
-        .collect()
+    x.iter().zip(scale).map(|(v, s)| v * inv * s).collect()
 }
 
 /// Adjoint of [`rmsnorm`] with respect to the input.
@@ -40,7 +37,10 @@ pub fn rmsnorm_backward_scale(x: &[f64], eps: f64, grad_out: &[f64]) -> Vec<f64>
     let n = x.len() as f64;
     let ms = x.iter().map(|v| v * v).sum::<f64>() / n;
     let inv = 1.0 / (ms + eps).sqrt();
-    x.iter().zip(grad_out).map(|(xi, gi)| gi * xi * inv).collect()
+    x.iter()
+        .zip(grad_out)
+        .map(|(xi, gi)| gi * xi * inv)
+        .collect()
 }
 
 /// RMSNorm applied independently to each head of a `heads x head_dim` layout.

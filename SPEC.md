@@ -137,8 +137,34 @@ blocks and e8m0 shared scales, global grad-norm clip 1.0.
 ### 3.10 Reference configurations
 
 <!-- BEGIN PARAMS TABLE -->
-PLACEHOLDER
+| config | total params | active (L=1) | per iteration | trunk | core | embedding | pkm | byte path | deploy bytes | kv/token/layer |
+|---|---|---|---|---|---|---|---|---|---|---|
+| test-s | 1519569 | 835341 | 254723 | 876042 | 354307 | 131136 | 0 | 0 | 5499836 | 80 |
+| test-m | 14913845 | 5497005 | 968581 | 11608872 | 2152069 | 524416 | 0 | 0 | 57349572 | 80 |
+| test-l | 267184693 | 231638573 | 3866373 | 46343720 | 8592645 | 0 | 0 | 209746176 | 644242116 | 160 |
+| edge | 2494026897 | 430252161 | 55417865 | 1960313976 | 231658505 | 262145024 | 0 | 0 | 1768594214 | 576 |
+| standard | 29505308465 | 3974620425 | 280162325 | 26196031988 | 1696123925 | 655362560 | 2696675328 | 708471552 | 16250316598 | 576 |
+| flagship | 70340188353 | 10885908609 | 649684001 | 64815857760 | 2839725089 | 1048580096 | 12961972224 | 997843968 | 42828076134 | 576 |
 <!-- END PARAMS TABLE -->
+
+Design targets from the build prompt, for reference against the generated
+numbers above (targets are +/-10% and refer to the trunk plus Core, excluding
+the byte path and MTP heads):
+
+| field | Test-S | Edge | Standard | Flagship |
+|---|---|---|---|---|
+| d_model | 64 | 1024 | 2560 | 4096 |
+| trunk strata (blocks) | 1 (6) | 3 (18) | 5 (30) | 7 (42) |
+| Core after stratum | 1 | 1 | 2 | 3 |
+| L_max | 3 | 4 | 8 | 8 |
+| heads x head_dim | 2 x 32 | 8 x 128 | 20 x 128 | 32 x 128 |
+| experts routed/shared/k | 4/1/2 | 32/1/4 | 64/2/4 | 64/2/6 |
+| expert hidden | 128 | 1024 | 1536 | 1536 |
+| expert groups | 2 | 4 | 8 | 8 |
+| PKM blocks | none | none | 15 | 12, 24, 36 |
+| front end | BPE | BPE | both | both |
+| deploy format | f32 | MXINT4 | MXFP4 | MXFP4 + FP8 attn |
+
 
 ## 4. Op vocabulary and tolerances
 

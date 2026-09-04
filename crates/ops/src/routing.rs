@@ -43,7 +43,10 @@ pub struct Routing {
 /// Affinity `s_e = sigmoid(clamp(logit, -30, 30))`.
 #[must_use]
 pub fn affinities(logits: &[f64]) -> Vec<f64> {
-    logits.iter().map(|l| sigmoid(l.clamp(-30.0, 30.0))).collect()
+    logits
+        .iter()
+        .map(|l| sigmoid(l.clamp(-30.0, 30.0)))
+        .collect()
 }
 
 /// Group-limited top-k routing with deterministic tie-breaks.

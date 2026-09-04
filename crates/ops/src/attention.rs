@@ -194,7 +194,11 @@ pub fn mla_prefill(
                 }
                 let logit = softcap(dot * cfg.scale(), cfg.softcap);
                 let new_m = m.max(logit);
-                let corr = if m.is_finite() { (m - new_m).exp() } else { 0.0 };
+                let corr = if m.is_finite() {
+                    (m - new_m).exp()
+                } else {
+                    0.0
+                };
                 let w = (logit - new_m).exp();
                 l = l * corr + w;
                 for d in 0..cfg.head_dim {
@@ -254,7 +258,11 @@ pub fn mla_decode(
             }
             let logit = softcap(dot * cfg.scale(), cfg.softcap);
             let new_m = m.max(logit);
-            let corr = if m.is_finite() { (m - new_m).exp() } else { 0.0 };
+            let corr = if m.is_finite() {
+                (m - new_m).exp()
+            } else {
+                0.0
+            };
             let w = (logit - new_m).exp();
             l = l * corr + w;
             for d in 0..cfg.head_dim {
@@ -370,15 +378,7 @@ mod tests {
     fn prefill_matches_dense_reference() {
         let n = 20;
         let f = fixture(n, vec![0; n]);
-        let got = mla_prefill(
-            &f.cfg,
-            &f.cache,
-            &f.queries,
-            &f.segs,
-            &f.w_uk,
-            &f.w_uv,
-            5,
-        );
+        let got = mla_prefill(&f.cfg, &f.cache, &f.queries, &f.segs, &f.w_uk, &f.w_uv, 5);
         for t in 0..n {
             let want = dense_reference(&f, t);
             for d in 0..f.cfg.head_dim {

@@ -67,7 +67,9 @@ impl ReadSource {
         match s {
             "input" => Ok(ReadSource::Input),
             "prev_iter" => Ok(ReadSource::PrevIter),
-            other => Err(Error::Invalid(format!("unknown core_read_source `{other}`"))),
+            other => Err(Error::Invalid(format!(
+                "unknown core_read_source `{other}`"
+            ))),
         }
     }
 
@@ -219,10 +221,7 @@ impl ModelConfig {
         }
         for &b in &self.pkm_blocks {
             if b == 0 || b > self.trunk_blocks() {
-                return inv(format!(
-                    "pkm block {b} outside 1..={}",
-                    self.trunk_blocks()
-                ));
+                return inv(format!("pkm block {b} outside 1..={}", self.trunk_blocks()));
             }
         }
         if !self.pkm_blocks.is_empty() && self.pkm_slots == 0 {
@@ -301,9 +300,7 @@ impl ModelConfig {
                     "bf16" => DType::BF16,
                     "mxfp4" => DType::MXFP4,
                     "mxint4" => DType::MXINT4,
-                    other => {
-                        return Err(Error::Invalid(format!("unknown deploy dtype `{other}`")))
-                    }
+                    other => return Err(Error::Invalid(format!("unknown deploy dtype `{other}`"))),
                 },
                 None => DType::F32,
             },
@@ -360,10 +357,23 @@ mod tests {
     }
 
     #[test]
-    fn rejects_topk_beyond_two_groups() {
+    fn rejects_topk_beyond_the_expert_count() {
         let mut c = ModelConfig::test_s();
-        c.top_k = 4;
+        c.top_k = 5;
         assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn rejects_topk_beyond_two_groups() {
+        // 12 experts in 4 groups: only the top-2 groups (6 experts) are
+        // reachable, so k = 7 must be refused.
+        let mut c = ModelConfig::test_s();
+        c.experts_routed = 12;
+        c.expert_groups = 4;
+        c.top_k = 7;
+        assert!(c.validate().is_err());
+        c.top_k = 6;
+        c.validate().expect("k = 6 fits in the top-2 groups");
     }
 
     #[test]

@@ -81,7 +81,11 @@ impl DType {
 #[must_use]
 pub fn fp8_e4m3_round_trip(x: f64) -> f64 {
     if !x.is_finite() {
-        return if x.is_nan() { f64::NAN } else { x.signum() * 448.0 };
+        return if x.is_nan() {
+            f64::NAN
+        } else {
+            x.signum() * 448.0
+        };
     }
     let sign = if x.is_sign_negative() { -1.0 } else { 1.0 };
     let a = x.abs();

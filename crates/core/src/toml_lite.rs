@@ -268,10 +268,7 @@ pkm_blocks = [12, 24, 36]
         )
         .expect("valid document");
         assert_eq!(doc.get("name").unwrap().as_str("name").unwrap(), "test-s");
-        assert_eq!(
-            doc.get("model.d_model").unwrap().as_usize("d").unwrap(),
-            64
-        );
+        assert_eq!(doc.get("model.d_model").unwrap().as_usize("d").unwrap(), 64);
         assert!((doc.get("model.tau").unwrap().as_float("t").unwrap() - 0.5).abs() < 1e-12);
         assert!(!doc.get("model.byte_path").unwrap().as_bool("b").unwrap());
         assert_eq!(

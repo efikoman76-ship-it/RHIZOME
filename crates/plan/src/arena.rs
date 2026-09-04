@@ -201,8 +201,16 @@ mod tests {
             .expect("valid");
         let p = plan(&g).expect("plannable");
         p.verify().expect("no conflicts");
-        let xi = p.intervals.iter().find(|i| i.tensor == x).expect("x placed");
-        let bi = p.intervals.iter().find(|i| i.tensor == b).expect("b placed");
+        let xi = p
+            .intervals
+            .iter()
+            .find(|i| i.tensor == x)
+            .expect("x placed");
+        let bi = p
+            .intervals
+            .iter()
+            .find(|i| i.tensor == b)
+            .expect("b placed");
         assert!(!xi.overlaps_memory(bi));
     }
 

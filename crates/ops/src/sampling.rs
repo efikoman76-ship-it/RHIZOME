@@ -198,12 +198,7 @@ mod tests {
     #[test]
     fn masked_tokens_never_get_probability() {
         let logits = [10.0, 0.0];
-        let d = distribution(
-            &logits,
-            &SamplingParams::default(),
-            &[],
-            &[false, true],
-        );
+        let d = distribution(&logits, &SamplingParams::default(), &[], &[false, true]);
         assert!(d[0] < 1e-12);
         assert!((d[1] - 1.0).abs() < 1e-12);
     }

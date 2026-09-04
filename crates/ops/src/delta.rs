@@ -234,8 +234,8 @@ pub fn gated_delta_multistep(
 /// `state` holds the previous three samples (oldest first) and is updated.
 #[must_use]
 pub fn causal_conv1d_step(state: &mut [f64; 3], weight: &[f64; 4], x: f64, bias: f64) -> f64 {
-    let y = weight[0] * state[0] + weight[1] * state[1] + weight[2] * state[2] + weight[3] * x
-        + bias;
+    let y =
+        weight[0] * state[0] + weight[1] * state[1] + weight[2] * state[2] + weight[3] * x + bias;
     state[0] = state[1];
     state[1] = state[2];
     state[2] = x;

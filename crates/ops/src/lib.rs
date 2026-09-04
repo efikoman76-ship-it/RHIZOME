@@ -18,6 +18,6 @@ pub mod rng;
 pub mod routing;
 pub mod sampling;
 
-pub use elementwise::{silu, sigmoid, swiglu};
+pub use elementwise::{sigmoid, silu, swiglu};
 pub use gradcheck::{central_difference, GradCheckReport};
 pub use norm::rmsnorm;

@@ -133,7 +133,9 @@ pub fn muon_newton_schulz(g: &Matrix, iters: usize) -> Matrix {
     for _ in 0..iters {
         let xt = x.transpose();
         let Some(a_mat) = matmul(&x, &xt) else { break };
-        let Some(b_mat) = matmul(&a_mat, &x) else { break };
+        let Some(b_mat) = matmul(&a_mat, &x) else {
+            break;
+        };
         let Some(a2) = matmul(&a_mat, &a_mat) else {
             break;
         };
