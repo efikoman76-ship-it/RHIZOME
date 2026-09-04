@@ -32,12 +32,20 @@ implementation bug, which was fixed instead.
 
 3. **`linalg::newton_schulz_produces_near_orthogonal_rows`.** The test asserted
    the Gram matrix is within 0.35 of the identity after 5 iterations. That is
-   not what the Muon quintic guarantees: after Frobenius normalisation the
-   singular values start well below one, and five iterations compress their
-   spread rather than driving them to one. The test now asserts the properties
-   Muon actually relies on — the diagonal spread of the Gram matrix strictly
-   decreases, and off-diagonal mass stays below 25% of diagonal mass — plus a
-   new test that the tall-matrix transpose path preserves shape and finiteness.
+   not what the Muon quintic guarantees. After Frobenius normalisation the
+   input singular values are around `[0.24, 0.32, 0.46, 0.79]`; five iterations
+   move them to about `[0.75, 1.05, 1.10, 1.13]`. The spectrum is collapsed
+   toward one — which is exactly what the RMS-matched update scaling needs —
+   but the Gram matrix is not near the identity in the entrywise sense, and its
+   *diagonal* spread is not even monotone across iterations (a first attempt at
+   a diagonal-spread assertion also failed, for the same reason: the diagonal
+   of the Gram matrix is basis-dependent while the spectrum is not).
+
+   The test now computes the actual singular values via a cyclic Jacobi
+   eigensolver on the Gram matrix and asserts the basis-independent properties:
+   the condition number strictly decreases, ends below 2, and every singular
+   value lands in `[0.5, 1.35]`. It runs over three random matrices. A second
+   test covers the tall-matrix transpose path.
 
 4. **`routing::balance_loss_is_lower_when_balanced`.** The fixture gave both the
    balanced and the skewed routing identical affinities `[0.25; 4]`. With equal

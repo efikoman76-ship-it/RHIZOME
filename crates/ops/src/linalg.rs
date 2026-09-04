@@ -246,42 +246,75 @@ mod tests {
         assert!(grouped_linear(&x, &[3], &[w]).is_none());
     }
 
-    #[test]
-    fn newton_schulz_equalises_the_spectrum() {
-        // The Muon quintic does not drive singular values exactly to one; it
-        // compresses their spread. The invariant we rely on is that the row
-        // Gram matrix becomes far better conditioned than the input's.
-        let g = random_matrix(4, 8, 8);
-        let before = matmul(&g, &g.transpose()).expect("shape");
-        let o = muon_newton_schulz(&g, 5);
-        let after = matmul(&o, &o.transpose()).expect("shape");
-
-        let spread = |m: &Matrix| -> f64 {
-            let diag: Vec<f64> = (0..m.rows).map(|i| m.at(i, i)).collect();
-            let hi = diag.iter().cloned().fold(f64::MIN, f64::max);
-            let lo = diag.iter().cloned().fold(f64::MAX, f64::min);
-            hi / lo.max(1e-12)
-        };
-        assert!(
-            spread(&after) < spread(&before),
-            "spread {} -> {}",
-            spread(&before),
-            spread(&after)
-        );
-
-        // Off-diagonal mass must be small relative to the diagonal.
-        let mut off = 0.0f64;
-        let mut on = 0.0f64;
-        for i in 0..4 {
-            for j in 0..4 {
-                if i == j {
-                    on += after.at(i, j).abs();
-                } else {
-                    off += after.at(i, j).abs();
+    /// Eigenvalues of a small symmetric matrix, ascending (cyclic Jacobi).
+    fn sym_eigenvalues(m: &Matrix) -> Vec<f64> {
+        let n = m.rows;
+        let mut a = m.clone();
+        for _ in 0..100 {
+            let (mut p, mut q, mut mx) = (0usize, 1usize, 0.0f64);
+            for i in 0..n {
+                for j in i + 1..n {
+                    if a.at(i, j).abs() > mx {
+                        mx = a.at(i, j).abs();
+                        p = i;
+                        q = j;
+                    }
                 }
             }
+            if mx < 1e-14 {
+                break;
+            }
+            let theta = 0.5 * (2.0 * a.at(p, q)).atan2(a.at(p, p) - a.at(q, q));
+            let (s, c) = theta.sin_cos();
+            for k in 0..n {
+                let (apk, aqk) = (a.at(p, k), a.at(q, k));
+                a.set(p, k, c * apk + s * aqk);
+                a.set(q, k, -s * apk + c * aqk);
+            }
+            for k in 0..n {
+                let (akp, akq) = (a.at(k, p), a.at(k, q));
+                a.set(k, p, c * akp + s * akq);
+                a.set(k, q, -s * akp + c * akq);
+            }
         }
-        assert!(off < 0.25 * on, "off {off} vs on {on}");
+        let mut e: Vec<f64> = (0..n).map(|i| a.at(i, i)).collect();
+        e.sort_by(|x, y| x.partial_cmp(y).unwrap_or(core::cmp::Ordering::Equal));
+        e
+    }
+
+    fn singular_values(m: &Matrix) -> Vec<f64> {
+        let gram = matmul(m, &m.transpose()).expect("shape");
+        sym_eigenvalues(&gram)
+            .into_iter()
+            .map(|e| e.max(0.0).sqrt())
+            .collect()
+    }
+
+    #[test]
+    fn newton_schulz_equalises_the_singular_spectrum() {
+        // Muon's five-step quintic does not produce an exactly orthogonal
+        // matrix; it collapses the singular spectrum toward one, which is the
+        // property the RMS-matched update scaling relies on.
+        for stream in [8u64, 10, 11] {
+            let g = random_matrix(4, 8, stream);
+            let before = singular_values(&g);
+            let after = singular_values(&muon_newton_schulz(&g, 5));
+
+            let cond = |v: &[f64]| v[v.len() - 1] / v[0].max(1e-12);
+            assert!(
+                cond(&after) < cond(&before),
+                "condition number {} -> {}",
+                cond(&before),
+                cond(&after)
+            );
+            assert!(cond(&after) < 2.0, "condition number {}", cond(&after));
+            for sv in &after {
+                assert!(
+                    (0.5..=1.35).contains(sv),
+                    "singular value {sv} outside [0.5, 1.35]"
+                );
+            }
+        }
     }
 
     #[test]
