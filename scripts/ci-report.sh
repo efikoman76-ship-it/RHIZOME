@@ -49,4 +49,4 @@ p.write_text(b, encoding="utf-8")
 PY
 
 gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
-  -f body=@"${body_file}" >/dev/null && echo "ci-report: posted commit comment"
+  -F body=@"${body_file}" >/dev/null && echo "ci-report: posted commit comment"
