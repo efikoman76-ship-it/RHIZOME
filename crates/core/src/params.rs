@@ -208,7 +208,9 @@ pub fn report(c: &ModelConfig) -> ParamReport {
     let deploy_bytes = {
         let quantized = trunk + core + pkm.min(trunk);
         let dense = total.saturating_sub(quantized);
-        (c.deploy_dtype.bytes_for(quantized as usize) + DType::BF16.bytes_for(dense as usize)) as u64
+        let q = c.deploy_dtype.bytes_for(quantized as usize);
+        let dn = DType::BF16.bytes_for(dense as usize);
+        (q + dn) as u64
     };
 
     ParamReport {

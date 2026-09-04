@@ -31,10 +31,10 @@ if [ "${status}" -eq 0 ]; then
   exit 0
 fi
 
-# Annotate the last 60 lines, one annotation per line, with %0A-escaped
+# Annotate the log tail (CI_STEP_TAIL lines), one annotation per line, with %0A-escaped
 # content so multi-line rustc diagnostics survive.
 echo "::error title=${name} failed::exit status ${status} for: ${cmd}"
-tail -n 60 "${log}" | while IFS= read -r line; do
+tail -n "${CI_STEP_TAIL:-60}" "${log}" | while IFS= read -r line; do
   # Skip blank lines to keep the annotation list readable.
   [ -z "${line}" ] && continue
   printf '::error title=%s::%s\n' "${name}" "${line//%/%25}"

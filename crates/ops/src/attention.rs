@@ -445,7 +445,9 @@ mod tests {
             rope_dim: 0,
             softcap: 1.0,
         };
-        let out = attention_reference(&cfg, &[100.0, 0.0], &[100.0, 0.0, 0.0, 1.0], &[1.0, 0.0, 0.0, 1.0], &[true, true]);
+        let keys = [100.0, 0.0, 0.0, 1.0];
+        let values = [1.0, 0.0, 0.0, 1.0];
+        let out = attention_reference(&cfg, &[100.0, 0.0], &keys, &values, &[true, true]);
         // With a cap the far key still receives non-negligible mass.
         assert!(out[1] > 1e-3);
     }

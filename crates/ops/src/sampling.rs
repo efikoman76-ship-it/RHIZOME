@@ -37,7 +37,12 @@ impl Default for SamplingParams {
 
 /// Apply masking, penalties and filters, returning the final distribution.
 #[must_use]
-pub fn distribution(logits: &[f64], p: &SamplingParams, history: &[usize], mask: &[bool]) -> Vec<f64> {
+pub fn distribution(
+    logits: &[f64],
+    p: &SamplingParams,
+    history: &[usize],
+    mask: &[bool],
+) -> Vec<f64> {
     let mut l = logits.to_vec();
     for (i, allowed) in mask.iter().enumerate() {
         if !allowed {

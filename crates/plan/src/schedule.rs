@@ -164,7 +164,9 @@ mod tests {
         let small = GreedyPlanner.choose(&g, 0);
         let large = GreedyPlanner.choose(&g, 1 << 20);
         assert!(large.len() > small.len());
-        assert!(checkpoint_bytes(&g, &large).expect("ok") >= checkpoint_bytes(&g, &small).expect("ok"));
+        let big = checkpoint_bytes(&g, &large).expect("ok");
+        let tiny = checkpoint_bytes(&g, &small).expect("ok");
+        assert!(big >= tiny);
     }
 
     #[test]

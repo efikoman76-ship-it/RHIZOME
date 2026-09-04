@@ -40,6 +40,8 @@ jobs:
 
       - name: fmt
         shell: bash
+        env:
+          CI_STEP_TAIL: "400"
         run: bash scripts/ci-step.sh fmt "cargo fmt --all -- --check"
 
       - name: clippy

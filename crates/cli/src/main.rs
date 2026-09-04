@@ -67,7 +67,8 @@ fn cmd_inspect(args: &[String]) -> Result<String, String> {
     let cfg = ModelConfig::from_toml(&text).map_err(|e| e.to_string())?;
     let r = report(&cfg);
     Ok(format!(
-        "name={}\nd_model={}\ntrunk_blocks={}\nl_max={}\nfront_end={}\ntotal_params={}\nflops_l1={}\nflops_lmax={}\n",
+        "name={}\nd_model={}\ntrunk_blocks={}\nl_max={}\n\
+front_end={}\ntotal_params={}\nflops_l1={}\nflops_lmax={}\n",
         cfg.name,
         cfg.d_model,
         cfg.trunk_blocks(),
@@ -139,13 +140,17 @@ fn cmd_spec_check() -> Result<String, String> {
         Ok("spec-check: SPEC.md params table matches `rhizome params`\n".to_string())
     } else {
         Err(format!(
-            "spec-check: SPEC.md params table is stale.\n--- expected ---\n{table}\n--- found ---\n{embedded}\n"
+            "spec-check: SPEC.md params table is stale.\n\
+--- expected ---\n{table}\n--- found ---\n{embedded}\n"
         ))
     }
 }
 
 fn usage() -> String {
-    "rhizome <command>\n\ncommands:\n  params [--format=markdown|text]\n  inspect <config.toml>\n  verify\n  spec-check\n".to_string()
+    "rhizome <command>\n\ncommands:\n\
+  params [--format=markdown|text]\n  inspect <config.toml>\n\
+  verify\n  spec-check\n"
+        .to_string()
 }
 
 fn run() -> Result<String, String> {
