@@ -247,19 +247,48 @@ mod tests {
     }
 
     #[test]
-    fn newton_schulz_produces_near_orthogonal_rows() {
+    fn newton_schulz_equalises_the_spectrum() {
+        // The Muon quintic does not drive singular values exactly to one; it
+        // compresses their spread. The invariant we rely on is that the row
+        // Gram matrix becomes far better conditioned than the input's.
         let g = random_matrix(4, 8, 8);
+        let before = matmul(&g, &g.transpose()).expect("shape");
         let o = muon_newton_schulz(&g, 5);
-        let gram = matmul(&o, &o.transpose()).expect("shape");
+        let after = matmul(&o, &o.transpose()).expect("shape");
+
+        let spread = |m: &Matrix| -> f64 {
+            let diag: Vec<f64> = (0..m.rows).map(|i| m.at(i, i)).collect();
+            let hi = diag.iter().cloned().fold(f64::MIN, f64::max);
+            let lo = diag.iter().cloned().fold(f64::MAX, f64::min);
+            hi / lo.max(1e-12)
+        };
+        assert!(
+            spread(&after) < spread(&before),
+            "spread {} -> {}",
+            spread(&before),
+            spread(&after)
+        );
+
+        // Off-diagonal mass must be small relative to the diagonal.
+        let mut off = 0.0f64;
+        let mut on = 0.0f64;
         for i in 0..4 {
             for j in 0..4 {
-                let target = if i == j { 1.0 } else { 0.0 };
-                assert!(
-                    (gram.at(i, j) - target).abs() < 0.35,
-                    "gram[{i}][{j}] = {}",
-                    gram.at(i, j)
-                );
+                if i == j {
+                    on += after.at(i, j).abs();
+                } else {
+                    off += after.at(i, j).abs();
+                }
             }
         }
+        assert!(off < 0.25 * on, "off {off} vs on {on}");
+    }
+
+    #[test]
+    fn newton_schulz_preserves_orientation_for_tall_matrices() {
+        let g = random_matrix(8, 4, 9);
+        let o = muon_newton_schulz(&g, 5);
+        assert_eq!((o.rows, o.cols), (8, 4));
+        assert!(o.data.iter().all(|v| v.is_finite()));
     }
 }

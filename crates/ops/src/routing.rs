@@ -295,12 +295,14 @@ mod tests {
                 affinities: vec![0.25; 4],
             })
             .collect();
+        // A skewed router also has skewed affinities: the overloaded experts
+        // are the ones it scores highly.
         let skewed: Vec<Routing> = (0..4)
             .map(|_| Routing {
                 experts: vec![0, 1],
                 gates: vec![0.5, 0.5],
                 groups: vec![0],
-                affinities: vec![0.25; 4],
+                affinities: vec![0.4, 0.4, 0.1, 0.1],
             })
             .collect();
         assert!(balance_loss(&c, &balanced) < balance_loss(&c, &skewed));

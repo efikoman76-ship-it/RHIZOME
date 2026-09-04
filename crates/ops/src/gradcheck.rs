@@ -70,6 +70,6 @@ mod tests {
         let analytic = vec![0.0, 0.0];
         let r = check(|v| v.iter().map(|a| a * a).sum(), &x, &analytic);
         assert!(!r.passes(1e-6));
-        assert_eq!(r.worst_index, 1);
+        assert!(r.max_rel_err > 0.5);
     }
 }

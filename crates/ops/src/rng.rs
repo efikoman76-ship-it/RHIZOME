@@ -72,10 +72,13 @@ impl Philox {
     }
 
     /// Uniform sample in `[0, 1)`.
+    ///
+    /// Exactly 53 bits of mantissa are taken from two 32-bit words, so the
+    /// result is always strictly less than one.
     pub fn next_f64(&mut self) -> f64 {
-        let hi = u64::from(self.next_u32());
-        let lo = u64::from(self.next_u32());
-        (((hi << 21) ^ lo) >> 11) as f64 / (1u64 << 53) as f64
+        let hi = u64::from(self.next_u32() >> 5); // 27 bits
+        let lo = u64::from(self.next_u32() >> 6); // 26 bits
+        ((hi << 26) | lo) as f64 / (1u64 << 53) as f64
     }
 
     /// Standard normal sample via Box–Muller (deterministic pairing).
@@ -98,8 +101,9 @@ impl Philox {
 pub fn stateless_uniform(seed: u64, stream: u64, index: u64) -> f64 {
     let p = Philox::new(seed, stream);
     let b = p.block(index);
-    let combined = (u64::from(b[0]) << 32) | u64::from(b[1]);
-    (combined >> 11) as f64 / (1u64 << 53) as f64
+    let hi = u64::from(b[0] >> 5);
+    let lo = u64::from(b[1] >> 6);
+    ((hi << 26) | lo) as f64 / (1u64 << 53) as f64
 }
 
 #[cfg(test)]
