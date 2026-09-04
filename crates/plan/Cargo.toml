@@ -1,0 +1,12 @@
+[package]
+name = "rhizome-plan"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rhizome-core = { path = "../core" }
+rhizome-ops = { path = "../ops" }
+
+[lints]
+workspace = true

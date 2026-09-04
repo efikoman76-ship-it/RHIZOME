@@ -1,0 +1,94 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: never
+  CARGO_TERM_VERBOSE: "true"
+  RUST_BACKTRACE: "1"
+
+jobs:
+  # Windows is the only build target for CI by request; every step echoes its
+  # full output so failures are readable from the workflow log alone.
+  test-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain versions
+        shell: bash
+        run: |
+          set -x
+          rustc --version
+          cargo --version
+          cargo fmt --version
+          cargo clippy --version
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: cargo fmt --check
+        shell: bash
+        run: |
+          # Print the exact reformatting diff into the log so a red run is
+          # actionable without downloading anything.
+          cargo fmt --all
+          echo "===== BEGIN FMT DIFF ====="
+          git --no-pager diff | tee fmt.log
+          echo "===== END FMT DIFF ====="
+          test ! -s fmt.log
+          git checkout -- .
+
+      - name: cargo clippy
+        shell: bash
+        run: cargo clippy --workspace --all-targets -- -D warnings 2>&1 | tee clippy.log
+
+      - name: cargo build
+        shell: bash
+        run: cargo build --workspace --all-targets --verbose 2>&1 | tee build.log
+
+      - name: cargo test
+        shell: bash
+        run: cargo test --workspace --verbose -- --nocapture 2>&1 | tee test.log
+
+      - name: cargo doc
+        shell: bash
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+        run: cargo doc --no-deps --workspace 2>&1 | tee doc.log
+
+      - name: rhizome params (generated table)
+        shell: bash
+        run: |
+          echo "===== BEGIN GENERATED PARAMS TABLE ====="
+          cargo run -q -p rhizome-cli -- params --format=markdown 2>&1 | tee params.md
+          echo "===== END GENERATED PARAMS TABLE ====="
+
+      - name: rhizome verify
+        shell: bash
+        run: cargo run -q -p rhizome-cli -- verify 2>&1 | tee verify.log
+
+      - name: spec-sync
+        shell: bash
+        run: cargo run -q -p rhizome-cli -- spec-check 2>&1 | tee spec.log
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: |
+            *.log
+            params.md
+          if-no-files-found: ignore

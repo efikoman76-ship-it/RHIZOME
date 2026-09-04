@@ -1,0 +1,32 @@
+name = "flagship"
+schema_version = 1
+
+[model]
+d_model = 4096
+strata = 7
+core_after_stratum = 3
+l_max = 8
+heads = 32
+head_dim = 128
+kv_lora = 512
+rope_dim = 64
+mtp_heads = 2
+
+[moe]
+experts_routed = 64
+experts_shared = 2
+top_k = 6
+expert_hidden = 1536
+groups = 8
+
+[pkm]
+blocks = [12, 24, 36]
+slots = 1048576
+
+[frontend]
+kind = "both"
+vocab = 128000
+d_local = 1024
+
+[deploy]
+dtype = "mxfp4"
