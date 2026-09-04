@@ -15,22 +15,22 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: never
-  CARGO_TERM_VERBOSE: "true"
   RUST_BACKTRACE: "1"
 
 jobs:
-  # Windows is the only build target for CI by request; every step echoes its
-  # full output so failures are readable from the workflow log alone.
+  # Windows is the only build target for CI by request (ADR 0002). Every step
+  # runs through scripts/ci-step.sh, which tees full output into the log and
+  # re-emits the tail as ::error:: annotations so a red run can be diagnosed
+  # from the run summary alone, without downloading artifacts.
   test-windows:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
       - name: Toolchain versions
         shell: bash
         run: |
-          set -x
           rustc --version
           cargo --version
           cargo fmt --version
@@ -38,57 +38,50 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: cargo fmt --check
+      - name: fmt
         shell: bash
-        run: |
-          # Print the exact reformatting diff into the log so a red run is
-          # actionable without downloading anything.
-          cargo fmt --all
-          echo "===== BEGIN FMT DIFF ====="
-          git --no-pager diff | tee fmt.log
-          echo "===== END FMT DIFF ====="
-          test ! -s fmt.log
-          git checkout -- .
+        run: bash scripts/ci-step.sh fmt "cargo fmt --all -- --check"
 
-      - name: cargo clippy
+      - name: clippy
         shell: bash
-        run: cargo clippy --workspace --all-targets -- -D warnings 2>&1 | tee clippy.log
+        run: bash scripts/ci-step.sh clippy "cargo clippy --workspace --all-targets -- -D warnings"
 
-      - name: cargo build
+      - name: build
         shell: bash
-        run: cargo build --workspace --all-targets --verbose 2>&1 | tee build.log
+        run: bash scripts/ci-step.sh build "cargo build --workspace --all-targets"
 
-      - name: cargo test
+      - name: test
         shell: bash
-        run: cargo test --workspace --verbose -- --nocapture 2>&1 | tee test.log
+        run: bash scripts/ci-step.sh test "cargo test --workspace -- --nocapture"
 
-      - name: cargo doc
+      - name: doc
         shell: bash
         env:
           RUSTDOCFLAGS: "-D warnings"
-        run: cargo doc --no-deps --workspace 2>&1 | tee doc.log
+        run: bash scripts/ci-step.sh doc "cargo doc --no-deps --workspace"
 
-      - name: rhizome params (generated table)
+      - name: params
         shell: bash
         run: |
-          echo "===== BEGIN GENERATED PARAMS TABLE ====="
-          cargo run -q -p rhizome-cli -- params --format=markdown 2>&1 | tee params.md
-          echo "===== END GENERATED PARAMS TABLE ====="
+          bash scripts/ci-step.sh params "cargo run -q -p rhizome-cli -- params --format=markdown"
+          {
+            echo '## rhizome params --format=markdown'
+            echo
+            cat logs/params.log
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: rhizome verify
+      - name: verify
         shell: bash
-        run: cargo run -q -p rhizome-cli -- verify 2>&1 | tee verify.log
+        run: bash scripts/ci-step.sh verify "cargo run -q -p rhizome-cli -- verify"
 
       - name: spec-sync
         shell: bash
-        run: cargo run -q -p rhizome-cli -- spec-check 2>&1 | tee spec.log
+        run: bash scripts/ci-step.sh spec-check "cargo run -q -p rhizome-cli -- spec-check"
 
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ci-logs
-          path: |
-            *.log
-            params.md
+          path: logs/
           if-no-files-found: ignore
