@@ -1,0 +1,28 @@
+name = "test-s"
+schema_version = 1
+
+[model]
+d_model = 64
+strata = 1
+core_after_stratum = 1
+l_max = 3
+heads = 2
+head_dim = 32
+kv_lora = 64
+rope_dim = 16
+mtp_heads = 2
+core_read_source = "input"
+
+[moe]
+experts_routed = 4
+experts_shared = 1
+top_k = 2
+expert_hidden = 128
+groups = 2
+
+[frontend]
+kind = "bpe"
+vocab = 1024
+
+[deploy]
+dtype = "f32"

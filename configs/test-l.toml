@@ -1,0 +1,28 @@
+name = "test-l"
+schema_version = 1
+
+[model]
+d_model = 256
+strata = 2
+core_after_stratum = 1
+l_max = 4
+heads = 4
+head_dim = 64
+kv_lora = 128
+rope_dim = 32
+mtp_heads = 2
+
+[moe]
+experts_routed = 8
+experts_shared = 1
+top_k = 2
+expert_hidden = 512
+groups = 2
+
+[frontend]
+kind = "byte"
+vocab = 128000
+d_local = 256
+
+[deploy]
+dtype = "f32"

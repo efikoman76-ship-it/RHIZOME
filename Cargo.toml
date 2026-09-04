@@ -1,0 +1,33 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/core",
+    "crates/ops",
+    "crates/plan",
+    "crates/cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+license = "Apache-2.0"
+repository = "https://github.com/efikoman76-ship-it/RHIZOME"
+
+[workspace.lints.rust]
+missing_docs = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.clippy]
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"
+# Numeric kernels are written index-first to mirror the math in SPEC.md and
+# docs/kernels.md; rewriting them as iterator zips obscures the recurrences.
+needless_range_loop = "allow"
+too_many_arguments = "allow"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1

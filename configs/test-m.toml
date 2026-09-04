@@ -1,0 +1,27 @@
+name = "test-m"
+schema_version = 1
+
+[model]
+d_model = 128
+strata = 2
+core_after_stratum = 1
+l_max = 4
+heads = 4
+head_dim = 32
+kv_lora = 64
+rope_dim = 16
+mtp_heads = 2
+
+[moe]
+experts_routed = 8
+experts_shared = 1
+top_k = 2
+expert_hidden = 256
+groups = 2
+
+[frontend]
+kind = "bpe"
+vocab = 2048
+
+[deploy]
+dtype = "f32"

@@ -1,0 +1,69 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: never
+  RUST_BACKTRACE: "1"
+
+jobs:
+  # Windows is the only build target by request (ADR 0002). Every check runs
+  # even if an earlier one fails, so one run reports every problem, and the
+  # captured logs are published as a commit comment because runner logs and
+  # artifacts live on blob storage that is not reachable for diagnosis.
+  test-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain versions
+        shell: bash
+        run: |
+          rustc --version
+          cargo --version
+          cargo fmt --version
+          cargo clippy --version
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run all checks
+        id: checks
+        shell: bash
+        run: bash scripts/ci-all.sh
+
+      - name: Publish logs as a commit comment
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/ci-report.sh "${{ job.status }}"
+
+      - name: Job summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## rhizome params --format=markdown'
+            echo
+            cat logs/params.log 2>/dev/null || echo '(params did not run)'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: logs/
+          if-no-files-found: ignore

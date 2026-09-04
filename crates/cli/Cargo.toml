@@ -1,0 +1,17 @@
+[package]
+name = "rhizome-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "rhizome"
+path = "src/main.rs"
+
+[dependencies]
+rhizome-core = { path = "../core" }
+rhizome-ops = { path = "../ops" }
+rhizome-plan = { path = "../plan" }
+
+[lints]
+workspace = true
